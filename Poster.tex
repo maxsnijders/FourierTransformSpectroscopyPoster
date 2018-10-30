@@ -1,0 +1,292 @@
+% !TeX TXS-program:compile = txs:///xelatex
+\documentclass{article}
+ 
+ \usepackage{pgfplots}
+ \usepackage{tikz}
+ \usepackage[landscape, paper=a1paper, margin=0pt]{geometry}
+ \usepackage{etoolbox}
+ \usepackage{fontspec}
+ \usepackage{color}
+ \usepackage{graphicx}
+ \usepackage{silence}
+ \usepackage{setspace}
+ \usepackage{pdfpages}
+ \usepackage[parfill]{parskip}
+ \usepackage[none]{hyphenat}
+\usepackage[mode=buildnew]{standalone}% requires -shell-escape
+
+\usetikzlibrary{calc}  
+\setmainfont{Fira Sans}
+
+\definecolor{BackgroundColor}{HTML}{FFFFFF}
+\definecolor{EdgeBlockColor}{HTML}{3BB878}
+\definecolor{BaseBlockColor}{HTML}{E6FFF4}
+\definecolor{HeaderBlockColor}{HTML}{B5FFDE}
+
+\def\colwidth{20cm}
+\def\txtwidth{24cm}
+
+\def\edgespacing{1cm}
+\def\colblockspacing{1cm}
+\def\colspacing{1cm}
+
+\def\colcount{3}
+
+\def\headerheightsides{7cm}
+\def\headerheightmid{9cm}	
+
+%Function which draws the background (image/color)
+ \newcommand{\drawbackground}{
+	\fill[BackgroundColor] (0,0) rectangle(\paperwidth, \paperheight);
+}
+
+
+%Function which draws the setup at the current location
+\newcommand{\drawsetup}{
+	\node[anchor=south west](Setup) at (4.5cm,-0.3cm){\includestandalone[width=22cm]{Setup}};
+}
+
+%Function which daws the columns and blocks
+\newcommand{\drawstructure}{
+	%-------   Calculate coordinates
+	%HEADER
+	\coordinate (HeaderNW) at (\edgespacing,\paperheight-\edgespacing);
+	\coordinate (HeaderNE) at (\paperwidth - \edgespacing, \paperheight-\edgespacing);
+	\coordinate (HeaderSW) at (\edgespacing,\paperheight-\edgespacing-\headerheightsides);
+	\coordinate (HeaderSE) at (\paperwidth - \edgespacing,\paperheight-\edgespacing-\headerheightsides);
+	\coordinate (HeaderSM) at (\paperwidth/2,\paperheight-\edgespacing-\headerheightmid);
+
+	%--------- Computing parameters
+	\pgfkeys{/pgf/fpu=true,/pgf/fpu/output format=fixed}
+	
+	\pgfmathparse{(\paperwidth - 2 * \edgespacing - \colcount*\colspacing) / \colcount};
+	\let\colwidth\pgfmathresult
+	
+	\pgfmathparse{\colwidth/2}
+	\let\halfcolwidth\pgfmathresult
+	
+	\pgfmathparse{(\headerheightmid-\headerheightsides) * \colwidth/(\paperwidth/2 - \edgespacing)}
+	\let\yOffsetFirstColNE\pgfmathresult
+	
+	\pgfmathparse{(\headerheightmid-\headerheightsides) * (\colwidth + \colspacing)/(\paperwidth/2 - \edgespacing)}
+	\let\yOffsetSecondColN\pgfmathresult
+
+	%First COL
+	\coordinate (FirstColNW) at (\edgespacing,\paperheight-\headerheightsides-\edgespacing-\colblockspacing);
+	\coordinate (FirstColNE) at (\edgespacing+\colwidth,\paperheight-\edgespacing-\colblockspacing -\headerheightsides - \yOffsetFirstColNE);
+	\coordinate (FirstColSE) at (\edgespacing+\colwidth,\edgespacing);
+	\coordinate (FirstColSW) at (\edgespacing,\edgespacing);
+	
+	%Second COL
+	\coordinate (SecondColNW) at (\edgespacing+\colwidth+\colspacing,\paperheight-\edgespacing-\colblockspacing-\headerheightsides-\yOffsetSecondColN);
+	\coordinate (SecondColNM) at (\paperwidth/2,\paperheight - \edgespacing - \headerheightmid - \colblockspacing);
+	\coordinate (SecondColNE) at (\paperwidth - \edgespacing - \colwidth - \colspacing, \paperheight - \edgespacing - \colblockspacing - \headerheightsides - \yOffsetSecondColN);
+	\coordinate (SecondColSE) at (\paperwidth - \edgespacing - \colwidth - \colspacing,\edgespacing);
+	\coordinate (SecondColSW) at (\edgespacing+\colwidth+\colspacing,\edgespacing);
+	\coordinate (SecondColNMH) at ($(SecondColNM) - (0,3cm)$);
+	\coordinate (SecondColNEH) at (SecondColNE |- SecondColNMH);
+	\coordinate (SecondColNWH) at (SecondColNW |- SecondColNMH);
+	
+	%Third COL
+	\coordinate (ThirdColNW) at (\paperwidth - \edgespacing - \colwidth, \paperheight - \edgespacing - \colblockspacing - \headerheightsides - \yOffsetFirstColNE);
+	\coordinate (ThirdColNE) at (\paperwidth - \edgespacing,\paperheight - \edgespacing - \colspacing - \headerheightsides);
+	\coordinate (ThirdColSE) at (\paperwidth - \edgespacing, \edgespacing);
+	\coordinate (ThirdColSW) at (\paperwidth - \edgespacing - \colwidth, \edgespacing);
+	
+	%First Block (First Col)
+	\coordinate (FirstBlockNW) at (FirstColNW);
+	\coordinate (FirstBlockNE) at (FirstColNE);
+	\coordinate (FirstBlockSE) at ($(FirstColSE) + (0,38.4cm)$);
+	\coordinate (FirstBlockSW) at ($(FirstColSW) + (0,38.4cm)$);
+	\coordinate (FirstBlockNEH) at ($(FirstBlockNE) - (0,3cm)$);
+	\coordinate (FirstBlockNWH) at (FirstBlockSW |- FirstBlockNEH);
+
+	%Second Block (First Col)
+	\coordinate (SecondBlockNW) at ($(FirstBlockSW) - (0,\colblockspacing)$);
+	\coordinate (SecondBlockNE) at ($(FirstBlockSE) - (0,\colblockspacing)$);
+	\coordinate (SecondBlockSE) at ($(FirstColSE) + (0,15.62cm)$);
+	\coordinate (SecondBlockSW) at ($(FirstColSW) + (0,15.62cm)$);
+	\coordinate (SecondBlockNWH) at ($(SecondBlockNW) - (0,3cm)$);
+	\coordinate (SecondBlockNEH) at (SecondBlockNE |- SecondBlockNWH);
+
+	%Third Block (First Col)
+	\coordinate (ThirdBlockNW) at ($(SecondBlockSW) - (0,\colblockspacing)$);
+	\coordinate (ThirdBlockNE) at ($(SecondBlockSE) - (0, \colblockspacing)$);
+	\coordinate (ThirdBlockSE) at (FirstColSE);
+	\coordinate (ThirdBlockSW) at (FirstColSW);
+	\coordinate (ThirdBlockNEH) at ($(ThirdBlockNE) - (0,3cm)$);
+	\coordinate (ThirdBlockNWH) at (ThirdBlockNW |- ThirdBlockNEH);
+	
+	\coordinate (ConclusionBlockNW) at ($(ThirdColSW) + (0,8.2cm)$);
+	\coordinate (ConclusionBlockNE) at ($(ThirdColSE) + (0,8.2cm)$);
+	\coordinate (ConclusionBlockNWH) at ($(ConclusionBlockNW) - (0,3cm)$);
+	\coordinate (ConclusionBlockNEH) at (ConclusionBlockNE |- ConclusionBlockNWH);
+
+	\coordinate (ResultsBlockEndSE) at ($(ConclusionBlockNE) + (0,\colblockspacing)$);
+	\coordinate (ResultsBlockEndSW) at (ConclusionBlockNW |- ResultsBlockEndSE);
+
+	%---------- Drawing!
+	%Header
+	\draw[Block] (HeaderNW) -- (HeaderNE) -- (HeaderSE) -- (HeaderSM) -- (HeaderSW) -- cycle;
+	
+	%Columns
+	%\draw[Block] (FirstColNW) -- (FirstColNE) -- (FirstColSE) -- (FirstColSW) -- cycle;
+	\draw[Block] (SecondColNW) -- (SecondColNM) -- (SecondColNE) -- (SecondColSE) -- (SecondColSW) -- cycle;
+	\draw[BlockHeader] (SecondColNW) -- (SecondColNM) -- (SecondColNE) -- (SecondColNEH) -- (SecondColNWH) -- cycle;
+	
+	\draw[Block] (ThirdColNW) -- (ThirdColNE) -- (ResultsBlockEndSE) -- (ResultsBlockEndSW) -- cycle;
+	
+	%Blocks
+	\draw[Block] (FirstBlockNW) -- (FirstBlockNE) -- (FirstBlockSE) -- (FirstBlockSW) -- cycle;
+	\draw[BlockHeader] (FirstBlockNW) -- (FirstBlockNE) -- (FirstBlockNEH) -- (FirstBlockNWH) -- cycle;
+	\draw[Block] (SecondBlockNW) -- (SecondBlockNE) -- (SecondBlockSE) -- (SecondBlockSW) -- cycle;
+	\draw[BlockHeader] (SecondBlockNW) -- (SecondBlockNE) -- (SecondBlockNEH) -- (SecondBlockNWH) -- cycle;
+	\draw[Block] (ThirdBlockNE) -- (ThirdBlockNW) -- (ThirdBlockSW) -- (ThirdBlockSE) -- cycle;
+	\draw[BlockHeader] (ThirdBlockNE) -- (ThirdBlockNW) -- (ThirdBlockNWH) -- (ThirdBlockNEH) -- cycle;
+	
+	\draw[Block] (ConclusionBlockNW) -- (ConclusionBlockNE) -- (ThirdColSE) -- (ThirdColSW) -- cycle;
+	\draw[BlockHeader] (ConclusionBlockNW) -- (ConclusionBlockNE) -- (ConclusionBlockNEH) -- (ConclusionBlockNWH) -- cycle;
+}
+
+\newcommand{\HeaderFont}{
+	\fontsize{60}{72}
+ 	\selectfont
+}
+
+\newcommand{\TextFont}{
+	\fontsize{30}{50}
+	\selectfont	
+}
+
+\newenvironment{textblock}{\TextFont \setlength{\baselineskip}{30pt}
+}{\par}
+
+\newcommand{\DrawHeader}{
+	\node at ($ (HeaderNW) !.5! (HeaderNE) + (0,-3cm)$){ \fontsize{120}{72} \selectfont Fourier Transform Spectroscopy};
+	\node at ($(HeaderNW) !.5! (HeaderNE) + (1,-6cm)$){\emph{\HeaderFont Max Snijders\textsuperscript{1} \& Brin Verheijden\textsuperscript{2}}};
+	\node at ($(HeaderNW) !.5! (HeaderNE) + (0,-8cm)$){\TextFont \textsuperscript{1}s1409123, \textsuperscript{2}s1369644};
+	\node at ($(HeaderNW) !.5! (HeaderSW) + (5cm,0)$){\includegraphics[width=5cm]{Figures/Leiden_University_Seal.png}};
+	\node at ($(HeaderNE) !.5! (HeaderSE) + (-5cm,0)$){\includegraphics[width=8cm]{Figures/Lion_Logo.png}};
+}
+
+ \begin{document}
+
+	 	\noindent \begin{tikzpicture}[x=1cm,y=1cm]
+ 	
+	 	\tikzstyle{Block} = [fill=BaseBlockColor,draw=EdgeBlockColor]
+ 		\tikzstyle{BlockHeader} = [fill=HeaderBlockColor,draw=EdgeBlockColor]
+ 		\tikzstyle{BlockTitle} = [text height=8	ex, text depth=0.25ex]
+ 		
+		%Decorations: background
+		\drawbackground
+			
+		%Draw structure
+		\drawstructure
+
+		%Draw setup
+		\begin{scope}[shift={(SecondBlockSW)}, scale=0.5]
+			\drawsetup
+		\end{scope}
+		
+		\DrawHeader
+		
+		\node[BlockTitle] at ($(FirstBlockNWH) !.5! (FirstBlockNEH) + (0,1.5cm)$){\HeaderFont Introduction};
+		
+		\node[BlockTitle] at ($(SecondBlockNWH) !.5! (SecondBlockNEH) + (0,1.5cm)$){\HeaderFont Setup};
+		
+		\node[BlockTitle] at ($(ThirdBlockNWH) !.5! (ThirdBlockNEH) + (0,1.5cm)$){\HeaderFont Methods};
+		
+		\node[BlockTitle] at ($(SecondColNEH) !.5! (SecondColNWH) + (0,1.5cm)$){\HeaderFont Results};
+				
+		\node[BlockTitle] at ($(ConclusionBlockNWH) !.5! (ConclusionBlockNEH) + (0,1.5cm)$){\HeaderFont Conclusion};		
+				
+		\node[align=center, text width=\txtwidth, align=justify] at ($(FirstBlockNW) !.5! (FirstBlockNE) + (0,-7cm)$){
+			\begin{textblock}
+				In this experiment a Michelson interferometer was used to measure the emission spectra of several light sources and the transmission spectra of a selection of light filters. These spectra were then compared to known spectra. 
+			\end{textblock}
+		};
+		
+		\node[align=center, text width=\txtwidth, align=justify] at ($(ThirdBlockNW) !.5! (ThirdBlockNE) + (0,-8.9cm)$){
+			\begin{textblock}
+				The setup above shows the Michelson interferometer that was used. The two beams in the interferometer cause variable interference because one of the interferometer arms is variable in length. The frequency with which constructive interference occurs is proportional to the frequency of the light source. The fourier transforms from the two sensor signals are then compared and, using the known spectrum for the laser, the resulting spectrum is computed.
+			\end{textblock}
+		};
+		
+		%\node[anchor=north east](FirstGraph) at ($(SecondColNE) + (0,-9cm)$){\pgfimage[width=\colwidth pt]{Figures/BG36.png}};
+		%\node[anchor=south east](SecondGraph) at ($(ThirdColSE)$){\pgfimage[width=\colwidth pt]{Figures/BB.png}};
+		%\node[anchor=north east](ThirdGraph) at ($(ThirdColNE)$){\pgfimage[width=\colwidth pt]{Figures/Doublet.png}};
+		
+		%Second column
+		\node[anchor=north] (NA) at ($(SecondColNEH) !.5! (SecondColNWH) + (0,1.2cm)$){\pgfimage[width=\colwidth pt]{Figures/Na.png}};
+		\node[anchor=north, align=center, text width=18cm] (NACAP) at ($(NA.south)$){
+			\fontsize{20}{30} \selectfont
+			\textit{Figure 1: Emission spectrum of a sodium lamp.}
+		};
+				
+		\node[anchor=north, align=center, text width=\txtwidth, align=justify] (NASUB) at ($(NACAP.south) + (0,0cm)$){
+			\begin{textblock}
+				%This figure shows one of the measurements of the sodium spectrum. Clearly visible are the spectral lines at 589.0 nm, 589.6 nm 818.3 nm and 819.5 nm. These values correspond to values measured by NIST\textsuperscript{[1]} within a margin of 0.1 nm. The line at 632.8 nm is due to the laser signal (This signal is also visible in the other graphs). Below is shown a close-up of the peaks at 589 nm from the spectrum above.  
+				Figure 1 shows the emission spectrum of atomic sodium. The spectral lines at 589.0 nm, 589.6 nm, 818.3 nm and 819.5 nm all correspond to known sodium emission lines as recorded by the NIST\textsuperscript{[1]} to within a margin of 0.1 nm. Note the line at 632.8 nm, which is caused by the laser (This disturbance is also seen in the other spectra).
+			\end{textblock}
+		};
+		
+		\node[anchor=north] (NAD) at ($(NASUB.south) + (0,-0.21cm)$){\pgfimage[width=\colwidth pt]{Figures/Doublet.png}};
+		\node[anchor=north, align=center, text width=18cm] (NADCAP) at ($(NAD.south) - (0,1mm)$){
+			\fontsize{20}{30} \selectfont
+			\textit{Figure 2: Doublet lines from the spectrum shown in figure 1.}
+		};
+		
+		\node[anchor=north, align=center, text width=\txtwidth, align=justify] (NADSUB) at ($(NADCAP.south) - (0,1mm)$){
+			\begin{textblock}
+				%This graph shows the degeneracy of the 589 nm peak. This graph is a close-up of the graph above. The peak is split into a doublet with separate peaks at 588.99 nm and 589.58 nm respectively. These peaks match the NIST\textsuperscript{[1]} measurements within 0.01 nm.
+				The doublet in the sodium spectrum around 589 nm is shown in figure 2. This doublet is a result of a lifted degeneracy resulting in two sharp lines at 588.99 nm and 589.58 nm. Both lines match known NIST data\textsuperscript{[1]} to within 0.01 nm.
+			\end{textblock}
+		};
+		
+		%third col
+		\node[anchor=north] (BB) at ($(ThirdColNE) !.5! (ThirdColNW) + (0,2cm)$){
+			\pgfimage[width=\colwidth pt]{Figures/BB.png} \\
+		};
+		
+		\node[anchor=north, align=center, text width=18cm] (BBCAP) at ($(BB.south)$){
+			\fontsize{20}{30} \selectfont
+			\textit{Figure 3: Emission spectrum of a tungsten light bulb. The dark region is the corresponding Planck curve.}
+		};
+		
+		\node[anchor=north, align=center, text width=\txtwidth, align=justify] (BBSUB) at ($(BBCAP.south)$){
+			\begin{textblock}
+				%This graph shows the spectrum of a tungsten lamp. The figure shows both the measured spectrum, and the dark region shows the Planck curve with the same peak wavelength. The difference between the curves shows that our setup has limited sensitivity because the Planck curve is the predicted curve for a blackbody radiator.
+				The spectra of a tungsten lamp and a Planck curve with the same peak wavelength are compared in figure 3. The difference between the two curves is due to the wavelength-dependent sensitivity of the setup. 
+			\end{textblock}
+		};
+		
+		\node[anchor=north] (BG36) at ($(BBSUB.south) + (0,3cm)$){\pgfimage[width=\colwidth pt]{Figures/BG36.png}};
+		\node[anchor=north, align=center, text width=18cm] (BGCAP) at ($(BG36.south)$){
+			\fontsize{20}{30} \selectfont
+			\textit{Figure 4: transmission of the tungsten spectrum from figure 3 through a BG-36 light filter.}
+		};
+		
+		
+		\node[anchor=north, align=center, text width=\txtwidth, align=justify] (BG36SUB) at ($(BGCAP.south)$){
+			\begin{textblock}
+				%This figure shows the same spectrum as in the figure above, after having passed through a BG36 filter. Note the peaks around 1000 nm which are due to the detector, as they also show up in the tungsten spectrum.
+				Figure 4 shows the spectrum found by passing the tungsten lamp spectrum from figure 3 through a BG-36 filter. Note that the peaks around 1000 nm are also present in the tungsten lamp spectrum and that therefore they are not due to the filter. 
+			\end{textblock}
+		};
+		
+		\node[anchor=south east, text width=20cm, align=right] (NIST) at (ResultsBlockEndSE){
+			\begin{textblock}
+				\fontsize{10}{15} \selectfont
+				\textsuperscript{[1]}Kramida, A., Ralchenko, Y.U., Reader, J., and NIST ASD Team (2014). NIST Atomic Spectra Database (ver. 5.2), [Online]. Available: http://physics.nist.gov/asd [2015, May 6]. National Institute of Standards and Technology, Gaithersburg, MD.
+			\end{textblock}
+
+		};
+		
+		%Conclusion
+		\node[anchor=north, text width=\txtwidth, align=justify] (CONC) at ($(ConclusionBlockNEH) !.5! (ConclusionBlockNWH) + (0,-0.5cm)$){
+			\begin{textblock}
+				Using the Michelson interferometer a high resolution in the wavelength domain was obtained and the spectra of a series of light sources and filters were analysed.  
+			\end{textblock}
+		};
+	\end{tikzpicture}
+ \end{document}
